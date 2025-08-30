@@ -44,7 +44,9 @@ export default defineNuxtConfig({
     ssr: false,
     nitro: {
         prerender: {
-            routes: []
+            routes: [],
+            crawlLinks: false,
+            failOnError: false
         },
         routeRules: {
             '/**': {
