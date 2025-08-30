@@ -32,6 +32,8 @@ jobs:
 
       - name: Generate static site
         run: npm run generate:ghpages
+        env:
+          NUXT_PUBLIC_BASE_URL: /KOSH/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
