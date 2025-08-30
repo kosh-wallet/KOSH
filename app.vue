@@ -1,0 +1,36 @@
+<script setup>
+// Removed Flowbite initialization as we're using custom Vue modals
+import { useSecurityStore } from '~/stores/security'
+
+const securityStore = useSecurityStore()
+
+// Инициализация безопасности при запуске
+onMounted(async () => {
+  await securityStore.initialize()
+})
+
+// Блокировка при закрытии окна
+onBeforeUnmount(() => {
+  securityStore.lockApp()
+})
+
+// Блокировка при закрытии/перезагрузке страницы
+if (process.client) {
+  window.addEventListener('beforeunload', () => {
+    securityStore.lockApp()
+  })
+}
+</script>
+
+
+<template>
+  <div class="items-center justify-center lg:h-screen md:h-screen sm:h-screen h-screen  dark:bg-gray-900 ">
+
+    <!-- PIN-экран если приложение заблокировано -->
+    <PinLock v-if="securityStore.isLocked || securityStore.needsPinSetup" />
+    
+    <!-- Основное приложение если разблокировано -->
+    <Dashboard v-else />
+
+  </div>
+</template>

@@ -1,0 +1,52 @@
+{
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' nuxt build",
+    "dev": "NODE_ENV=development NODE_OPTIONS='--max-old-space-size=4096' nuxt dev",
+    "generate": "NODE_OPTIONS='--max-old-space-size=4096' nuxt generate",
+    "generate:ghpages": "NUXT_PUBLIC_BASE_URL=/KOSH/ NODE_ENV=production NODE_OPTIONS='--max-old-space-size=4096' nuxt generate",
+    "postgenerate": "cp -f ./.output/public/index.html ./.output/public/404.html || true",
+    "preview": "nuxt preview",
+    "serve:static": "npx --yes serve -s ./.output/public -l 5000",
+    "generate:local": "NUXT_PUBLIC_BASE_URL=/ NODE_ENV=production NODE_OPTIONS='--max-old-space-size=4096' nuxt generate",
+    "serve:local": "npx --yes serve -s ./.output/public -l 5000",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck"
+  },
+  "devDependencies": {
+    "@nuxtjs/tailwindcss": "^6.12.0",
+    "@vite-pwa/nuxt": "^0.4.0",
+    "nuxt": "^3.12.4",
+    "typescript": "^5.5.4",
+    "vite-plugin-node-polyfills": "^0.24.0",
+    "vue-tsc": "^2.2.10"
+  },
+  "dependencies": {
+    "@bitcoinerlab/secp256k1": "^1.2.0",
+    "@noble/secp256k1": "^2.3.0",
+    "@pinia/nuxt": "^0.5.1",
+    "@scure/bip32": "^1.7.0",
+    "bip39": "^3.1.0",
+    "bitcoinjs-lib": "^6.1.7",
+    "buffer": "^6.0.3",
+    "crypto-js": "^4.2.0",
+    "ecpair": "^2.1.0",
+    "ethers": "^5.7.2",
+    "file-saver": "^2.0.5",
+    "hdkey": "^2.1.0",
+    "js-sha3": "^0.8.0",
+    "pinia": "^2.1.7",
+    "tailwind-scrollbar-hide": "^1.1.7",
+    "tiny-secp256k1": "^2.2.3",
+    "tronweb": "^5.3.2",
+    "vue-qr": "^4.0.9"
+  },
+  "resolutions": {
+    "@noble/secp256k1": "1.6.3"
+  }
+}
