@@ -23,8 +23,15 @@
                 <!-- Modal body -->
                 <div class="p-6 space-y-6">
                     <div class="text-center">
-                        <vue-qr v-if="wallet && wallet.address" :text="wallet.address" :size="300" class="hover:opacity-50"
-                            @click.stop.prevent="copyQR(wallet.address)"></vue-qr>
+                        <ClientOnly>
+                            <vue-qr v-if="wallet && wallet.address" :text="wallet.address" :size="300" class="hover:opacity-50"
+                                @click.stop.prevent="copyQR(wallet.address)"></vue-qr>
+                            <template #fallback>
+                                <div class="w-[300px] h-[300px] bg-gray-200 dark:bg-gray-600 flex items-center justify-center mx-auto">
+                                    <span class="text-gray-500 dark:text-gray-400">Loading QR...</span>
+                                </div>
+                            </template>
+                        </ClientOnly>
                         <h1 v-if="copied" class="text-3xl overlay">Copied</h1>
                     </div>
 
