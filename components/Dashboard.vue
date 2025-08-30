@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { saveAs } from 'file-saver'
+import * as FileSaver from 'file-saver'
+const { saveAs } = FileSaver
 import { useWalletStore } from '~/stores/wallet'
 import { useSecurityStore } from '~/stores/security'
 import { CryptoService } from '~/services/crypto'
