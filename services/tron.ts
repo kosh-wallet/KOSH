@@ -1,17 +1,4 @@
-// services/tron.ts
-// Lazy-load TronWeb only on client to avoid SSR/prerender crashes
-let LoadedTronWeb: any | null = null
-async function loadTronWeb() {
-  if (typeof window === 'undefined') {
-    // Prevent server-side import during prerender
-    throw new Error('TronWeb is only available on the client')
-  }
-  if (!LoadedTronWeb) {
-    const mod: any = await import('tronweb/dist/TronWeb')
-    LoadedTronWeb = mod.default || mod
-  }
-  return LoadedTronWeb
-}
+import TronWeb from 'tronweb'
 
 export interface TronBalance {
   address: string
@@ -30,25 +17,24 @@ export class TronService {
   private tronWeb: any
   private usdtContractAddress = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
 
-  constructor() {}
+  constructor() {
+    this.initializeTronWeb()
+  }
 
   // Initialize TronWeb instance
-  private async ensureTronWeb(): Promise<any> {
-    if (this.tronWeb) return this.tronWeb
-    const TronWeb = await loadTronWeb()
+  private initializeTronWeb() {
     const HttpProvider = TronWeb.providers.HttpProvider
     const fullNode = new HttpProvider('https://api.trongrid.io')
     const solidityNode = new HttpProvider('https://api.trongrid.io')
     const eventServer = 'https://api.trongrid.io'
+
     this.tronWeb = new TronWeb(fullNode, solidityNode, eventServer)
-    return this.tronWeb
   }
 
   // Create wallet from mnemonic with proper error handling
-  async createWalletFromMnemonic(mnemonic: string, path: string) {
+  createWalletFromMnemonic(mnemonic: string, path: string) {
     try {
-      const tronWeb = await this.ensureTronWeb()
-      return tronWeb.fromMnemonic(mnemonic, path)
+      return this.tronWeb.fromMnemonic(mnemonic, path)
     } catch (error) {
       throw new Error(`Failed to create wallet: ${error}`)
     }
@@ -57,9 +43,8 @@ export class TronService {
   // Get balance with proper error handling and rate limiting
   async getBalance(address: string): Promise<TronBalance> {
     try {
-      const tronWeb = await this.ensureTronWeb()
       // Validate address format
-      if (!tronWeb.isAddress(address)) {
+      if (!this.tronWeb.isAddress(address)) {
         throw new Error('Invalid TRON address')
       }
 
@@ -82,10 +67,9 @@ export class TronService {
   // Get USDT balance from contract
   private async getUSDTBalance(address: string): Promise<number> {
     try {
-      const tronWeb = await this.ensureTronWeb()
       // Set the address before making contract calls
-      tronWeb.setAddress(address)
-      const contract = await tronWeb.contract().at(this.usdtContractAddress)
+      this.tronWeb.setAddress(address)
+      const contract = await this.tronWeb.contract().at(this.usdtContractAddress)
       const balance = await contract.balanceOf(address).call()
       return balance.toNumber() / 1000000 // Convert from 6 decimals
     } catch (error) {
@@ -97,8 +81,7 @@ export class TronService {
   // Get TRX balance and account info
   private async getTRXBalance(address: string): Promise<{ balance: number; frozen?: number }> {
     try {
-      const tronWeb = await this.ensureTronWeb()
-      const account = await tronWeb.trx.getAccount(address)
+      const account = await this.tronWeb.trx.getAccount(address)
       const balance = (account.balance || 0) / 1000000 // Convert from sun to TRX
       const frozen = account.account_resource?.frozen_balance_for_energy?.frozen_balance || 0
       
@@ -112,9 +95,8 @@ export class TronService {
   // Send USDT with proper validation
   async sendUSDT(fromAddress: string, privateKey: string, toAddress: string, amount: number): Promise<TransactionResult> {
     try {
-      const tronWeb = await this.ensureTronWeb()
       // Validate inputs
-      if (!tronWeb.isAddress(fromAddress) || !tronWeb.isAddress(toAddress)) {
+      if (!this.tronWeb.isAddress(fromAddress) || !this.tronWeb.isAddress(toAddress)) {
         throw new Error('Invalid address format')
       }
 
@@ -123,11 +105,11 @@ export class TronService {
       }
 
       // Set private key temporarily
-      tronWeb.setPrivateKey(privateKey)
-      tronWeb.setAddress(fromAddress)
+      this.tronWeb.setPrivateKey(privateKey)
+      this.tronWeb.setAddress(fromAddress)
 
       // Get contract instance
-      const contract = await tronWeb.contract().at(this.usdtContractAddress)
+      const contract = await this.tronWeb.contract().at(this.usdtContractAddress)
 
       // Convert amount to contract units (6 decimals)
       const amountInUnits = Math.floor(amount * 1000000)
@@ -154,16 +136,15 @@ export class TronService {
       }
     } finally {
       // Clear private key from memory by creating new TronWeb instance
-      this.tronWeb = null
+      this.initializeTronWeb()
     }
   }
 
   // Send TRX with proper validation
   async sendTRX(fromAddress: string, privateKey: string, toAddress: string, amount: number): Promise<TransactionResult> {
     try {
-      const tronWeb = await this.ensureTronWeb()
       // Validate inputs
-      if (!tronWeb.isAddress(fromAddress) || !tronWeb.isAddress(toAddress)) {
+      if (!this.tronWeb.isAddress(fromAddress) || !this.tronWeb.isAddress(toAddress)) {
         throw new Error('Invalid address format')
       }
 
@@ -173,9 +154,9 @@ export class TronService {
 
       // Set private key temporarily - strip 0x prefix and uppercase
       const cleanPrivateKey = privateKey.startsWith('0x') ? privateKey.slice(2).toUpperCase() : privateKey.toUpperCase()
-      tronWeb.setPrivateKey(cleanPrivateKey)
+      this.tronWeb.setPrivateKey(cleanPrivateKey)
       // Convert TRX to sun
-      const amountInSun = tronWeb.toSun(amount)
+      const amountInSun = this.tronWeb.toSun(amount)
 
       // Check balance before transaction
       const balance = await this.getTRXBalance(fromAddress)
@@ -184,7 +165,7 @@ export class TronService {
       }
 
       // Create and broadcast transaction
-      const transaction = await tronWeb.trx.sendTransaction(toAddress, amountInSun)
+      const transaction = await this.tronWeb.trx.sendTransaction(toAddress, amountInSun)
 
       return {
         success: true,
@@ -197,15 +178,13 @@ export class TronService {
       }
     } finally {
       // Clear private key from memory by creating new TronWeb instance
-      this.tronWeb = null
+      this.initializeTronWeb()
     }
   }
 
   // Validate address format
   isValidAddress(address: string): boolean {
     try {
-      // Avoid SSR usage; if not initialized yet, try to use client-side API only
-      if (!this.tronWeb) return false
       return this.tronWeb.isAddress(address)
     } catch {
       return false
@@ -215,8 +194,7 @@ export class TronService {
   // Get transaction details
   async getTransaction(txId: string) {
     try {
-      const tronWeb = await this.ensureTronWeb()
-      return await tronWeb.trx.getTransaction(txId)
+      return await this.tronWeb.trx.getTransaction(txId)
     } catch (error) {
       throw new Error(`Failed to get transaction: ${error}`)
     }
