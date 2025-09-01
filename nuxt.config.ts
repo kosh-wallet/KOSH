@@ -43,11 +43,13 @@ export default defineNuxtConfig({
     ],
     ssr: false,
     nitro: {
-        prerender: {
-            routes: [],
-            crawlLinks: false,
-            failOnError: false
-        },
+        prerender:  false
+        // {
+        //     routes: [],
+        //     crawlLinks: false,
+        //     failOnError: false
+        // }
+        ,
         routeRules: {
             '/**': {
                 headers: {
