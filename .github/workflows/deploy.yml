@@ -65,6 +65,9 @@ jobs:
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
           # NUXT_PUBLIC_BASE_URL: /KOSH/
+      - name: Add .nojekyll for GitHub Pages
+        run: |
+          touch ./.output/public/.nojekyll
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
