@@ -91,6 +91,11 @@ export default defineNuxtConfig({
             // iOS/Safari: use fallback to scope root to match what's actually cached
             // In some environments Workbox puts in precache not index.html but URL with trailing slash (e.g. "/KOSH/")
             navigateFallback: BASE,
+            // Ensure asset requests (module chunks) never fall back to HTML to avoid MIME errors
+            navigateFallbackDenylist: [
+            	/^\/_nuxt\//,
+            	new RegExp(`^${BASE.replace(/\//g, '\\/')}_nuxt\\/`)
+            ],
             globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
             cleanupOutdatedCaches: true,
             skipWaiting: true,
@@ -105,6 +110,8 @@ export default defineNuxtConfig({
         }
     },
     vite: {
+        // Force Vite to emit and reference assets under the same base as Nuxt app
+        base: BASE,
         define: {
             global: 'globalThis',
             'process.env': {},
