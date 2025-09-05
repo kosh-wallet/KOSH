@@ -12,7 +12,7 @@
 - **💼 HD Wallet Support**: Hierarchical deterministic wallet with multiple addresses across multiple chains
 - **📱 PWA Ready**: Installable web app with offline support
 - **🎨 Modern UI**: Clean, responsive interface built with Vue 3 and Tailwind CSS
-//TODO - **🔄 Real-time Balance**: Live balance tracking for USDT and native tokens across all supported chains
+- **TODO 🔄 Real-time Balance**: Live balance tracking for USDT and native tokens across all supported chains
 - **📤 Send/Receive**: Full transaction support with proper validation
 - **💾 Backup/Restore**: Secure wallet backup and restoration
 - **⚡ Fast**: Optimized performance with Nuxt 3
