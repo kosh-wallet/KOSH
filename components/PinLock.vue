@@ -98,11 +98,11 @@ const getCurrentPin = computed(() => {
 const getTitle = computed(() => {
   switch (step.value) {
     case 'setup':
-      return 'Установите PIN-код'
+      return 'Set PIN'
     case 'confirm':
-      return 'Подтвердите PIN-код'
+      return 'Confirm PIN'
     default:
-      return 'Введите PIN-код'
+      return 'Enter PIN'
   }
 })
 </script>
@@ -120,10 +120,10 @@ const getTitle = computed(() => {
         </div>
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ getTitle }}</h2>
         <p v-if="step === 'setup'" class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-          Создайте 6-значный PIN для защиты кошелька
+          Create 6-digit PIN for wallet protection
         </p>
         <p v-else-if="step === 'confirm'" class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-          Введите PIN еще раз для подтверждения
+          Enter PIN again to confirm
         </p>
       </div>
 

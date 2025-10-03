@@ -40,31 +40,31 @@
                                   @click="securityStore.isPinSet ? showChangePinModal = true : showSetPinModal = true"
                                   class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700"
                               >
-                                  {{ securityStore.isPinSet ? 'Изменить PIN' : 'Установить PIN' }}
+                                    {{ securityStore.isPinSet ? 'Change PIN' : 'Set PIN' }}
                               </button>
                           </div>
                           
                           <div v-if="securityStore.isPinSet" class="flex items-center justify-between">
                               <div>
                                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                      Удалить PIN
+                                      Remove PIN
                                   </label>
                                   <p class="text-xs text-gray-500 dark:text-gray-400">
-                                      Отключить PIN-защиту (не рекомендуется)
+                                      Disable PIN protection (not recommended)
                                   </p>
                               </div>
                               <button 
                                   @click="showRemovePinModal = true"
                                   class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg focus:ring-4 focus:ring-red-300"
                               >
-                                  Удалить PIN
+                                  Remove PIN
                               </button>
                           </div>
                       </div>
                   </div>
 
                   <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      Configure RPC endpoints for each blockchain network. Changes will be applied immediately.
+                    Configure RPC endpoints for each blockchain network. Changes will be applied immediately.
                   </div>
                   
                   <!-- TRON RPC Settings -->
@@ -179,10 +179,10 @@
       <div class="relative w-full max-w-md max-h-full">
           <div class="relative bg-white rounded-lg shadow dark:bg-gray-700 p-6">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Установить PIN-код
+                  Set PIN
               </h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                  PIN будет запрашиваться при каждом открытии приложения
+                  PIN will be requested when opening the application
               </p>
               <PinLock @pin-set="handlePinSet" />
           </div>
@@ -195,10 +195,10 @@
       <div class="relative w-full max-w-md max-h-full">
           <div class="relative bg-white rounded-lg shadow dark:bg-gray-700 p-6">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Изменить PIN-код
+                  Change PIN
               </h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                  Введите новый 6-значный PIN
+                  Enter new 6-digit PIN
               </p>
               <PinLock @pin-set="handlePinChange" />
           </div>
@@ -211,19 +211,19 @@
       <div class="relative w-full max-w-md max-h-full">
           <div class="relative bg-white rounded-lg shadow dark:bg-gray-700 p-6">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Удалить PIN-код
+                  Remove PIN
               </h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                  Вы уверены, что хотите отключить PIN-защиту? Это снизит безопасность приложения.
+                  Are you sure you want to disable PIN protection? This will reduce the security of the application.
               </p>
               <div class="flex space-x-4">
                   <button @click="handleRemovePin"
                       class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg">
-                      Да, удалить
+                      Yes, remove
                   </button>
                   <button @click="showRemovePinModal = false"
                       class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
-                      Отмена
+                      Cancel
                   </button>
               </div>
           </div>

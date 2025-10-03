@@ -78,8 +78,8 @@ const getTitle = computed(() => {
 
 const getDescription = computed(() => {
   return props.mode === 'export'
-    ? 'Введите PIN для обфускации файла резервной копии'
-    : 'Введите PIN для деобфускации файла резервной копии'
+    ? 'Enter PIN to obfuscate backup file'
+    : 'Enter PIN to deobfuscate backup file'
 })
 </script>
 

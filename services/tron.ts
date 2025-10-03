@@ -64,6 +64,52 @@ export class TronService {
     }
   }
 
+  // Wait for TRON transaction to be executed and return final receipt status
+  private async waitForTxResult(txId: string, timeoutMs: number = 60000, pollMs: number = 3000): Promise<{ confirmed: boolean; success: boolean; reason?: string }> {
+    const start = Date.now()
+    while (Date.now() - start < timeoutMs) {
+      try {
+        // getTransactionInfo returns execution result after inclusion
+        const info = await this.tronWeb.trx.getTransactionInfo(txId)
+        if (info && Object.keys(info).length > 0) {
+          const receipt = info.receipt || {}
+          const result = receipt.result || info.result
+
+          // Decode possible hex message to readable string
+          let reason: string | undefined
+          const rawMessage = info.resMessage || info.code
+          if (rawMessage && typeof rawMessage === 'string') {
+            try {
+              const hex = rawMessage.startsWith('0x') ? rawMessage.slice(2) : rawMessage
+              reason = Buffer.from(hex, 'hex').toString('utf8') || rawMessage
+            } catch {
+              reason = String(rawMessage)
+            }
+          }
+
+          // Map common failure due to energy
+          if (reason && /OUT OF ENERGY/i.test(reason)) {
+            return { confirmed: true, success: false, reason: 'Insufficient energy (OUT OF ENERGY)' }
+          }
+
+          if (result === 'SUCCESS') {
+            return { confirmed: true, success: true }
+          }
+
+          if (result && result !== 'SUCCESS') {
+            return { confirmed: true, success: false, reason: reason || String(result) }
+          }
+        }
+      } catch {
+        // ignore intermittent RPC errors and continue polling
+      }
+
+      await new Promise(r => setTimeout(r, pollMs))
+    }
+
+    return { confirmed: false, success: false, reason: 'Timed out waiting for confirmation' }
+  }
+
   // Get USDT balance from contract
   private async getUSDTBalance(address: string): Promise<number> {
     try {
@@ -126,10 +172,17 @@ export class TronService {
         feeLimit: 15000000 // 15 TRX fee limit
       })
 
-      return {
-        success: true,
-        txId: transaction
+      // Verify execution result (detect energy failures and reverts)
+      const receipt = await this.waitForTxResult(transaction)
+      if (!receipt.success) {
+        return {
+          success: false,
+          error: receipt.reason || 'Transaction failed during execution',
+          txId: transaction
+        }
       }
+
+      return { success: true, txId: transaction }
     } catch (error) {
       return {
         success: false,
@@ -168,10 +221,17 @@ export class TronService {
       // Create and broadcast transaction
       const transaction = await this.tronWeb.trx.sendTransaction(toAddress, amountInSun)
 
-      return {
-        success: true,
-        txId: transaction.txid
+      // Verify execution result
+      const receipt = await this.waitForTxResult(transaction.txid)
+      if (!receipt.success) {
+        return {
+          success: false,
+          error: receipt.reason || 'Transaction failed during execution',
+          txId: transaction.txid
+        }
       }
+
+      return { success: true, txId: transaction.txid }
     } catch (error) {
       return {
         success: false,
