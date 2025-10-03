@@ -104,8 +104,9 @@ export class TronService {
         throw new Error('Amount must be greater than 0')
       }
 
-      // Set private key temporarily
-      this.tronWeb.setPrivateKey(privateKey)
+      // Set private key temporarily (normalize like TRX flow: strip 0x and uppercase)
+      const cleanPrivateKey = privateKey.startsWith('0x') ? privateKey.slice(2).toUpperCase() : privateKey.toUpperCase()
+      this.tronWeb.setPrivateKey(cleanPrivateKey)
       this.tronWeb.setAddress(fromAddress)
 
       // Get contract instance
