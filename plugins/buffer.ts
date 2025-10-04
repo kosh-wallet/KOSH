@@ -1,4 +1,8 @@
 import { Buffer } from 'buffer'
-globalThis.Buffer = Buffer
 
-export default defineNuxtPlugin((nuxtApp) => { })
+export default defineNuxtPlugin((nuxtApp) => {
+  // Only set Buffer on client side to avoid SSR issues
+  if (process.client) {
+    globalThis.Buffer = Buffer
+  }
+})

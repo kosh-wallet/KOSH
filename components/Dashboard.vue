@@ -218,9 +218,11 @@ const performExport = async (pin?: string) => {
 
 // Open file dialog
 const openFile = () => {
-  const fileInput = document.getElementById('fileloader') as HTMLInputElement
-  if (fileInput) {
-    fileInput.click()
+  if (process.client) {
+    const fileInput = document.getElementById('fileloader') as HTMLInputElement
+    if (fileInput) {
+      fileInput.click()
+    }
   }
 }
 
@@ -283,7 +285,7 @@ const performImport = async (backupData: string | Uint8Array, pin?: string) => {
     })
 
     // Reload page if there are wallets present after import
-    if (walletStore.hasWallets) {
+    if (walletStore.hasWallets && process.client) {
       setTimeout(() => {
         window.location.reload()
       }, 1000) // Small delay to ensure UI updates are complete

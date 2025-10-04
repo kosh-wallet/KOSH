@@ -61,10 +61,19 @@ jobs:
       - name: Install dependencies
         run: ${{ steps.setup-package-manager.outputs.manager }} ${{ steps.setup-package-manager.outputs.command }}
       - name: Static HTML export with Nuxt
-        run: ${{ steps.setup-package-manager.outputs.manager }} run generate:ghpages
+        run: |
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Environment variables:"
+          echo "NODE_ENV: $NODE_ENV"
+          echo "NUXT_PUBLIC_BASE_URL: $NUXT_PUBLIC_BASE_URL"
+          echo "NODE_OPTIONS: $NODE_OPTIONS"
+          echo "Starting generation..."
+          ${{ steps.setup-package-manager.outputs.manager }} run generate:ghpages
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
           NUXT_PUBLIC_BASE_URL: /KOSH/
+          NODE_ENV: production
       - name: Add .nojekyll for GitHub Pages
         run: |
           touch ./.output/public/.nojekyll

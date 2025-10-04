@@ -132,7 +132,7 @@ export const useWalletStore = defineStore('wallet', {
           }
           
           // Fallback к обычному способу
-          if (!walletData) {
+          if (!walletData && process.client && typeof localStorage !== 'undefined') {
             const stored = localStorage.getItem('kosh_wallet')
             if (stored) {
               walletData = JSON.parse(stored)
@@ -172,7 +172,7 @@ export const useWalletStore = defineStore('wallet', {
         let fakeWallets = FakeWalletService.loadFakeWallets()
         
         // Если фальшивых кошельков нет, пытаемся создать их
-        if (!fakeWallets) {
+        if (!fakeWallets && process.client && typeof localStorage !== 'undefined') {
           // Сначала пытаемся загрузить реальный кошелек для создания фейка
           const realWalletData = localStorage.getItem('kosh_wallet')
           if (realWalletData) {
@@ -210,7 +210,9 @@ export const useWalletStore = defineStore('wallet', {
         const securityStore = useSecurityStore()
         
         // Обычное сохранение (обфускация происходит только в бэкапах)
-        localStorage.setItem('kosh_wallet', JSON.stringify(this.masterWallet))
+        if (process.client && typeof localStorage !== 'undefined') {
+          localStorage.setItem('kosh_wallet', JSON.stringify(this.masterWallet))
+        }
       } catch (error) {
         this.error = 'Failed to save wallets'
         console.error('Save wallets error:', error)
@@ -663,7 +665,9 @@ export const useWalletStore = defineStore('wallet', {
       this.masterWallet = null
       this.balances = {}
       this.error = null
-      localStorage.removeItem('kosh_wallet')
+      if (process.client && typeof localStorage !== 'undefined') {
+        localStorage.removeItem('kosh_wallet')
+      }
     }
   }
 })

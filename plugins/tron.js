@@ -2,7 +2,7 @@ import TronWeb from 'tronweb'
 
 // Helper function to get RPC URL (guarded for browser only)
 function getTronRPCUrl() {
-    if (typeof window === 'undefined') return 'https://api.trongrid.io'
+    if (typeof window === 'undefined' || !process.client) return 'https://api.trongrid.io'
     try {
         const saved = window.localStorage?.getItem('kosh_rpc_settings')
         if (saved) {

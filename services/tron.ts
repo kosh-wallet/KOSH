@@ -64,6 +64,30 @@ export class TronService {
     }
   }
 
+  // Format unknown error-like values into meaningful string for UI
+  private formatUnknownError(error: unknown): string {
+    try {
+      if (error instanceof Error) return error.message
+      if (typeof error === 'string') return error
+      if (error && typeof error === 'object') {
+        const anyErr: any = error
+        const parts: string[] = []
+        if (anyErr.message) parts.push(String(anyErr.message))
+        if (anyErr.code) parts.push(`code: ${anyErr.code}`)
+        if (anyErr.status) parts.push(`status: ${anyErr.status}`)
+        if (anyErr.error) parts.push(`error: ${String(anyErr.error)}`)
+        if (anyErr.response?.data) {
+          try { parts.push(`response: ${JSON.stringify(anyErr.response.data)}`) } catch {}
+        }
+        if (parts.length) return parts.join(' | ')
+        try { return JSON.stringify(error) } catch {}
+      }
+      return 'Transaction failed'
+    } catch {
+      return 'Transaction failed'
+    }
+  }
+
   // Wait for TRON transaction to be executed and return final receipt status
   private async waitForTxResult(txId: string, timeoutMs: number = 60000, pollMs: number = 3000): Promise<{ confirmed: boolean; success: boolean; reason?: string }> {
     const start = Date.now()
@@ -92,12 +116,24 @@ export class TronService {
             return { confirmed: true, success: false, reason: 'Insufficient energy (OUT OF ENERGY)' }
           }
 
+          // Enrich other failures with metrics if available
+          const fee = (info.fee != null ? info.fee : info.receipt?.fee) as number | undefined
+          const energy = (info.receipt?.energy_usage_total || info.receipt?.EnergyUsageTotal || info.energy_usage_total) as number | undefined
+          const builderMessage = info.receipt?.reject_message
+          if (!reason && builderMessage) {
+            reason = String(builderMessage)
+          }
           if (result === 'SUCCESS') {
             return { confirmed: true, success: true }
           }
 
           if (result && result !== 'SUCCESS') {
-            return { confirmed: true, success: false, reason: reason || String(result) }
+            const details: string[] = []
+            if (reason) details.push(reason)
+            details.push(String(result))
+            if (typeof fee === 'number') details.push(`fee: ${fee}`)
+            if (typeof energy === 'number') details.push(`energy_used: ${energy}`)
+            return { confirmed: true, success: false, reason: details.join(' | ') }
           }
         }
       } catch {
@@ -186,7 +222,7 @@ export class TronService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Transaction failed'
+        error: this.formatUnknownError(error)
       }
     } finally {
       // Clear private key from memory by creating new TronWeb instance
@@ -235,7 +271,7 @@ export class TronService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Transaction failed'
+        error: this.formatUnknownError(error)
       }
     } finally {
       // Clear private key from memory by creating new TronWeb instance

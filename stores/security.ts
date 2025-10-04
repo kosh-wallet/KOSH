@@ -27,10 +27,17 @@ export const useSecurityStore = defineStore('security', {
     // Инициализация - загрузка PIN из localStorage
     async initialize() {
       try {
-        const storedPin = localStorage.getItem('app_sec_config')
-        if (storedPin) {
-          this.correctPinHash = storedPin
-          this.isPinSet = true
+        // Only run on client side
+        if (typeof window === 'undefined' || !process.client) {
+          return
+        }
+        
+        if (typeof localStorage !== 'undefined') {
+          const storedPin = localStorage.getItem('app_sec_config')
+          if (storedPin) {
+            this.correctPinHash = storedPin
+            this.isPinSet = true
+          }
         }
       } catch (error) {
         console.error('Failed to load security config:', error)
@@ -56,7 +63,9 @@ export const useSecurityStore = defineStore('security', {
       this.isFakeMode = false
 
       // Сохраняем в localStorage под обфусцированным ключом
-      localStorage.setItem('app_sec_config', this.correctPinHash)
+      if (process.client && typeof localStorage !== 'undefined') {
+        localStorage.setItem('app_sec_config', this.correctPinHash)
+      }
     },
 
     // Проверка PIN - всегда возвращает true, но устанавливает режим
@@ -105,12 +114,17 @@ export const useSecurityStore = defineStore('security', {
       this.isPinSet = false
       this.isUnlocked = false
       this.isFakeMode = false
-      localStorage.removeItem('app_sec_config')
+      if (process.client && typeof localStorage !== 'undefined') {
+        localStorage.removeItem('app_sec_config')
+      }
     },
 
     // Проверка, установлен ли PIN
     checkPinExists(): boolean {
-      return !!localStorage.getItem('app_sec_config')
+      if (process.client && typeof localStorage !== 'undefined') {
+        return !!localStorage.getItem('app_sec_config')
+      }
+      return false
     }
   }
 })

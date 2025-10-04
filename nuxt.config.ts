@@ -38,7 +38,7 @@ export default defineNuxtConfig({
     },
     modules: [
         '@nuxtjs/tailwindcss',
-        '@vite-pwa/nuxt',
+        // '@vite-pwa/nuxt', // Temporarily disabled for static generation
         '@pinia/nuxt'
     ],
     ssr: false,
@@ -48,6 +48,16 @@ export default defineNuxtConfig({
             routes: [],
             crawlLinks: false,
             failOnError: false
+        },
+        experimental: {
+            wasm: true
+        },
+        // Add more strict SSR handling
+        storage: {
+            redis: {
+                driver: 'redis',
+                /* redis connector options */
+            }
         },
         routeRules: {
             '/**': {
@@ -61,55 +71,56 @@ export default defineNuxtConfig({
         strict: false,
         typeCheck: false
     },
-    pwa: {
-        registerType: 'autoUpdate',
-        manifest: {
-            name: 'KOSH TRC20 USDT Wallet',
-            short_name: 'KOSH',
-            description: 'Secure TRC20 USDT Wallet',
-            lang: 'en',
-            display: 'standalone',
-            // Binding to baseURL: relative paths are safer for deployment in subfolder
-            start_url: '.',
-            scope: BASE,
-            theme_color: '#ffffff',
-            background_color: '#ffffff',
-            icons: [
-                {
-                    // Relative path resolves correctly within scope
-                    src: 'icons/kosh192.png',
-                    sizes: '192x192',
-                    type: 'image/png'
-                },
-                {
-                    src: 'icons/kosh512.png',
-                    sizes: '512x512',
-                    type: 'image/png'
-                }
-            ]
-        },
-        workbox: {
-            // iOS/Safari: use fallback to scope root to match what's actually cached
-            // In some environments Workbox puts in precache not index.html but URL with trailing slash (e.g. "/KOSH/")
-            navigateFallback: BASE,
-            // Ensure asset requests (module chunks) never fall back to HTML to avoid MIME errors
-            navigateFallbackDenylist: [
-            	/^\/_nuxt\//,
-            	new RegExp(`^${BASE.replace(/\//g, '\\/')}_nuxt\\/`)
-            ],
-            globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-            cleanupOutdatedCaches: true,
-            skipWaiting: true,
-            clientsClaim: true
-        },
-        devOptions: {
-            enabled: process.env.NODE_ENV === 'production',
-            suppressWarnings: true,
-            // Allow navigation to baseURL root in plugin dev mode
-            navigateFallbackAllowlist: [new RegExp(`^${BASE.replace(/\//g, '\\/')}$`)],
-            type: 'module'
-        }
-    },
+    // PWA configuration temporarily disabled for static generation
+    // pwa: {
+    //     registerType: 'autoUpdate',
+    //     manifest: {
+    //         name: 'KOSH TRC20 USDT Wallet',
+    //         short_name: 'KOSH',
+    //         description: 'Secure TRC20 USDT Wallet',
+    //         lang: 'en',
+    //         display: 'standalone',
+    //         // Binding to baseURL: relative paths are safer for deployment in subfolder
+    //         start_url: '.',
+    //         scope: BASE,
+    //         theme_color: '#ffffff',
+    //         background_color: '#ffffff',
+    //         icons: [
+    //             {
+    //                 // Relative path resolves correctly within scope
+    //                 src: 'icons/kosh192.png',
+    //                 sizes: '192x192',
+    //                 type: 'image/png'
+    //             },
+    //             {
+    //                 src: 'icons/kosh512.png',
+    //                 sizes: '512x512',
+    //                 type: 'image/png'
+    //             }
+    //         ]
+    //     },
+    //     workbox: {
+    //         // iOS/Safari: use fallback to scope root to match what's actually cached
+    //         // In some environments Workbox puts in precache not index.html but URL with trailing slash (e.g. "/KOSH/")
+    //         navigateFallback: BASE,
+    //         // Ensure asset requests (module chunks) never fall back to HTML to avoid MIME errors
+    //         navigateFallbackDenylist: [
+    //         	/^\/_nuxt\//,
+    //         	new RegExp(`^${BASE.replace(/\//g, '\\/')}_nuxt\\/`)
+    //         ],
+    //         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+    //         cleanupOutdatedCaches: true,
+    //         skipWaiting: true,
+    //         clientsClaim: true
+    //     },
+    //     devOptions: {
+    //         enabled: process.env.NODE_ENV === 'production',
+    //         suppressWarnings: true,
+    //         // Allow navigation to baseURL root in plugin dev mode
+    //         navigateFallbackAllowlist: [new RegExp(`^${BASE.replace(/\//g, '\\/')}$`)],
+    //         type: 'module'
+    //     }
+    // },
     vite: {
         // Force Vite to emit and reference assets under the same base as Nuxt app
         base: BASE,

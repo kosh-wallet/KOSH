@@ -31,7 +31,9 @@
                     Choose network and enter your wallet password to add a new address.
                 </p>
                 
-                <form @submit.prevent="sendPassword" class="space-y-4">
+                <form @submit.prevent="sendPassword" class="space-y-4" autocomplete="off">
+                   
+                   
                     <!-- Network Selection -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -61,7 +63,7 @@
                             type="password" 
                             id="passwordinput"
                             placeholder="Enter your password"
-                            autocomplete="current-password"
+                            autocomplete="off"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
                             required 
                             @keyup.enter="sendPassword"

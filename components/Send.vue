@@ -135,6 +135,34 @@
             </div>
         </div>
     </div>
+
+    <div v-if="showResult" class="fixed top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="relative w-full max-w-md max-h-full">
+            <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                <button type="button" @click="showResult = false" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white">
+                    <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+                <div class="px-6 py-6 lg:px-8">
+                    <h3 class="mb-2 text-md font-semibold" :class="resultSuccess ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'">{{ resultTitle }}</h3>
+                    <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-line">{{ resultMessage }}</p>
+                    <div v-if="resultTxId" class="mt-3 text-xs text-gray-600 dark:text-gray-300 break-all">
+                        TX: {{ resultTxId }}
+                    </div>
+                    <div v-if="resultTips.length" class="mt-4">
+                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Suggestions</div>
+                        <ul class="list-disc list-inside text-sm text-gray-800 dark:text-gray-200">
+                            <li v-for="(tip, idx) in resultTips" :key="idx">{{ tip }}</li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 flex gap-2">
+                        <button type="button" class="px-4 py-2 text-sm rounded bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-900 dark:text-white" @click="showResult = false">Close</button>
+                        <a v-if="resultTxId && (wallet?.network === 'TRON')" :href="`https://tronscan.org/#/transaction/${resultTxId}`" target="_blank" class="px-4 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white">View on Explorer</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 
@@ -168,6 +196,34 @@ const isDisabled = computed(() => {
 const isSending = ref(false)
 const result = ref({})
 
+// Result dialog state
+const showResult = ref(false)
+const resultSuccess = ref<boolean | null>(null)
+const resultTitle = ref('')
+const resultMessage = ref('')
+const resultTxId = ref<string | null>(null)
+const resultTips = ref<string[]>([])
+
+const buildTips = (message?: string, network?: NetworkType) => {
+    const tips: string[] = []
+    const msg = (message || '').toUpperCase()
+    if (network === 'TRON') {
+        if (msg.includes('OUT OF ENERGY') || msg.includes('ENERGY')) {
+            tips.push('Freeze TRX to gain Energy or hold more TRX for fees')
+        }
+        if (msg.includes('FEE') || msg.includes('FEE LIMIT')) {
+            tips.push('Increase fee limit or ensure enough TRX balance')
+        }
+    }
+    if (msg.includes('INVALID ADDRESS')) {
+        tips.push('Verify recipient address format for the selected network')
+    }
+    if (msg.includes('INSUFFICIENT')) {
+        tips.push('Check token and native coin balances for fees')
+    }
+    return tips
+}
+
 const sendTransaction = async (wallet: any) => {
     isSending.value = true
 
@@ -181,7 +237,11 @@ const sendTransaction = async (wallet: any) => {
             plain = await decryptAsync(wallet.privateKey, password.value)
         }
         if (!plain) {
-            alert('Invalid password')
+            resultSuccess.value = false
+            resultTitle.value = 'Invalid password'
+            resultMessage.value = 'Please double-check your wallet password.'
+            resultTips.value = ['Ensure CapsLock is off', 'Try re-entering the password']
+            showResult.value = true
             isSending.value = false
             return
         }
@@ -196,15 +256,30 @@ const sendTransaction = async (wallet: any) => {
         }
 
         if (result.success) {
-            alert(`${asset.value} transaction sent successfully! TX: ${result.txId}`)
+            resultSuccess.value = true
+            resultTitle.value = `${asset.value} transaction sent`
+            resultMessage.value = `Transaction broadcasted successfully.`
+            resultTxId.value = result.txId || null
+            resultTips.value = []
+            showResult.value = true
             cleanup()
         } else {
-            alert(`Transaction failed: ${result.error}`)
+            resultSuccess.value = false
+            resultTitle.value = `Transaction failed`
+            resultMessage.value = result.error || 'Unknown error'
+            resultTxId.value = result.txId || null
+            resultTips.value = buildTips(result.error, network)
+            showResult.value = true
             isSending.value = false
         }
     } catch (error) {
         console.error('Send transaction error:', error)
-        alert(`Transaction failed: ${error.message}`)
+        resultSuccess.value = false
+        resultTitle.value = 'Transaction failed'
+        // @ts-ignore
+        resultMessage.value = error?.message || String(error)
+        resultTips.value = buildTips(resultMessage.value, props.wallet?.network)
+        showResult.value = true
         isSending.value = false
     }
 }
@@ -249,6 +324,7 @@ const cleanup = () => {
     amount.value = null
     isSending.value = false
     result.value = null
+    resultTxId.value = null
 }
 
 // Auto-select asset for Bitcoin wallets

@@ -118,6 +118,11 @@ export default defineNuxtPlugin(() => {
 			},
 			// Decrypt in Web Worker for isolation
 			decryptInWorker: async (payload: { ciphertext: string, password: string }): Promise<string | null> => {
+				// Only run on client side
+				if (!process.client || typeof Worker === 'undefined' || typeof URL === 'undefined') {
+					return null
+				}
+				
 				// Inline worker to avoid separate file
 				const workerBlob = new Blob([
 					`onmessage = async (e) => {\n` +
