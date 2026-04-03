@@ -3,7 +3,7 @@
 declare const defineNuxtConfig: any
 declare const process: any
 
-const BASE = process.env.NUXT_PUBLIC_BASE_URL || (process.env.NODE_ENV === 'production' ? '/KOSH/' : '/')
+const BASE = process.env.NUXT_PUBLIC_BASE_URL || (process.env.NODE_ENV === 'production' ? './' : '/')
 const CSP_DEV = "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https: ws:; worker-src 'self' blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; object-src 'none'; base-uri 'self'"
 // Allow inline scripts for static generation (hashes can be added later for specific scripts)
 const CSP_PROD = "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'"
