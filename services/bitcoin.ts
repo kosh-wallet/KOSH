@@ -4,10 +4,33 @@ import * as bip39 from 'bip39'
 import { HDKey } from '@scure/bip32'
 import { ECPairFactory } from 'ecpair'
 import * as secp from '@bitcoinerlab/secp256k1'
+import { useSettingsStore } from '~/stores/settings'
 
 // Initialize ECC lib (browser-friendly) and ECPair
 bitcoin.initEccLib(secp as any)
 const ECPair = ECPairFactory(secp as any)
+
+// Throttle helper - ensures minimum delay between requests
+let lastRequestTime = 0
+const throttleRequest = async (delayMs: number) => {
+    if (delayMs <= 0) return
+    const now = Date.now()
+    const elapsed = now - lastRequestTime
+    if (elapsed < delayMs) {
+        await new Promise(r => setTimeout(r, delayMs - elapsed))
+    }
+    lastRequestTime = Date.now()
+}
+
+// Get request delay from settings
+const getRequestDelay = (): number => {
+    try {
+        const settingsStore = useSettingsStore()
+        return settingsStore.requestDelay || 1000
+    } catch {
+        return 1000
+    }
+}
 
 export interface BitcoinBalance {
   address: string
@@ -340,6 +363,8 @@ export class BitcoinService {
   // Send Bitcoin transaction
   async sendBTC(privateKey: string, fromAddress: string, toAddress: string, amount: number, feeRate?: number): Promise<TransactionResult> {
     try {
+      // Throttle request to respect provider rate limits
+      await throttleRequest(getRequestDelay())
       // ECC is initialized globally via @bitcoinerlab/secp256k1
       // Validate inputs
       if (!this.isValidAddress(toAddress)) {

@@ -120,7 +120,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Bitcoin RPC Endpoint
                       </label>
-                      <input 
+                      <input
                           v-model="localSettings.bitcoin"
                           type="url"
                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400"
@@ -128,6 +128,25 @@
                       />
                       <p class="text-xs text-gray-500 dark:text-gray-400">
                           Default: https://bitcoin-rpc.publicnode.com
+                      </p>
+                  </div>
+
+                  <!-- Request Throttle Settings -->
+                  <div class="space-y-2 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Request Delay (ms)
+                      </label>
+                      <input
+                          v-model.number="localSettings.requestDelay"
+                          type="number"
+                          min="0"
+                          max="10000"
+                          step="100"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400"
+                          placeholder="1000"
+                      />
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                          Delay between provider requests in milliseconds. Default: 1000 (1 second). Set to 0 to disable.
                       </p>
                   </div>
 
@@ -260,6 +279,7 @@ const emit = defineEmits<{
 }>()
 
 const securityStore = useSecurityStore()
+const settingsStore = useSettingsStore()
 
 // PIN modals state
 const showSetPinModal = ref(false)
@@ -267,15 +287,16 @@ const showChangePinModal = ref(false)
 const showRemovePinModal = ref(false)
 
 // Default RPC endpoints
-const defaultSettings: RPCSettings = {
+const defaultSettings = {
     tron: 'https://api.trongrid.io',
     ethereum: 'https://eth-mainnet.public.blastapi.io/',
     bsc: 'https://bsc-rpc.publicnode.com',
-    bitcoin: 'https://bitcoin-rpc.publicnode.com'
+    bitcoin: 'https://bitcoin-rpc.publicnode.com',
+    requestDelay: 1000
 }
 
 // Local settings state
-const localSettings = ref<RPCSettings>({ ...defaultSettings })
+const localSettings = ref({ ...defaultSettings })
 const connectionStatus = ref<ConnectionStatus | null>(null)
 const isTesting = ref(false)
 
@@ -301,6 +322,14 @@ const loadSettings = () => {
         } else {
             localSettings.value = { ...defaultSettings }
         }
+        // Load request delay
+        const savedDelay = localStorage.getItem('kosh_request_delay')
+        if (savedDelay) {
+            const delay = parseInt(savedDelay, 10)
+            if (!isNaN(delay) && delay >= 0) {
+                localSettings.value.requestDelay = delay
+            }
+        }
     } catch (error) {
         console.error('Failed to load RPC settings:', error)
         localSettings.value = { ...defaultSettings }
@@ -319,7 +348,17 @@ const saveSettings = () => {
             return
         }
 
-        localStorage.setItem('kosh_rpc_settings', JSON.stringify(localSettings.value))
+        // Save RPC settings
+        const { requestDelay, ...rpcSettings } = localSettings.value
+        localStorage.setItem('kosh_rpc_settings', JSON.stringify(rpcSettings))
+        
+        // Save request delay
+        localStorage.setItem('kosh_request_delay', String(localSettings.value.requestDelay))
+        
+        // Update settings store
+        settingsStore.updateRPCSettings(rpcSettings)
+        settingsStore.updateRequestDelay(localSettings.value.requestDelay)
+        
         emit('settings-updated', { ...localSettings.value })
         connectionStatus.value = {
             success: true,
@@ -344,8 +383,10 @@ const resetToDefaults = () => {
 }
 
 const validateUrls = () => {
-    for (const [network, url] of Object.entries(localSettings.value)) {
-        if (!url.trim()) {
+    const rpcNetworks = ['tron', 'ethereum', 'bsc', 'bitcoin']
+    for (const network of rpcNetworks) {
+        const url = localSettings.value[network as keyof typeof localSettings.value]
+        if (typeof url !== 'string' || !url.trim()) {
             return { valid: false, message: `${network.toUpperCase()} RPC URL cannot be empty` }
         }
         

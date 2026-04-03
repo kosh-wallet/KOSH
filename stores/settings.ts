@@ -14,7 +14,9 @@ export const useSettingsStore = defineStore('settings', {
       ethereum: 'https://eth-mainnet.public.blastapi.io/',
       bsc: 'https://bsc-rpc.publicnode.com',
       bitcoin: 'https://blockstream.info/api'
-    } as RPCSettings
+    } as RPCSettings,
+    // Request delay in milliseconds between provider requests (default: 1000ms = 1 second)
+    requestDelay: 1000
   }),
 
   actions: {
@@ -36,6 +38,14 @@ export const useSettingsStore = defineStore('settings', {
             localStorage.removeItem('kosh_rpc_settings')
           }
         }
+        // Load request delay setting
+        const savedDelay = localStorage.getItem('kosh_request_delay')
+        if (savedDelay) {
+          const delay = parseInt(savedDelay, 10)
+          if (!isNaN(delay) && delay >= 0) {
+            this.requestDelay = delay
+          }
+        }
       } catch (error) {
         console.error('Failed to load RPC settings:', error)
       }
@@ -50,6 +60,18 @@ export const useSettingsStore = defineStore('settings', {
         localStorage.setItem('kosh_rpc_settings', JSON.stringify(settings))
       } catch (error) {
         console.error('Failed to save RPC settings:', error)
+      }
+    },
+
+    // Update request delay setting
+    updateRequestDelay(delay: number) {
+      if (delay >= 0) {
+        this.requestDelay = delay
+        try {
+          localStorage.setItem('kosh_request_delay', String(delay))
+        } catch (error) {
+          console.error('Failed to save request delay setting:', error)
+        }
       }
     },
 

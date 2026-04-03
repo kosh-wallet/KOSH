@@ -1,5 +1,28 @@
 // services/bsc.ts
 import { ethers } from 'ethers'
+import { useSettingsStore } from '~/stores/settings'
+
+// Throttle helper - ensures minimum delay between requests
+let lastRequestTime = 0
+const throttleRequest = async (delayMs: number) => {
+    if (delayMs <= 0) return
+    const now = Date.now()
+    const elapsed = now - lastRequestTime
+    if (elapsed < delayMs) {
+        await new Promise(r => setTimeout(r, delayMs - elapsed))
+    }
+    lastRequestTime = Date.now()
+}
+
+// Get request delay from settings
+const getRequestDelay = (): number => {
+    try {
+        const settingsStore = useSettingsStore()
+        return settingsStore.requestDelay || 1000
+    } catch {
+        return 1000
+    }
+}
 
 export interface BSCBalance {
   address: string
@@ -97,11 +120,13 @@ export class BSCService {
       throw new Error(`Failed to get balance: ${error}`)
     }
   }
+// Send BNB with proper error handling
+async sendBNB(privateKey: string, toAddress: string, amount: number): Promise<TransactionResult> {
+  try {
+    // Throttle request to respect provider rate limits
+    await throttleRequest(getRequestDelay())
 
-  // Send BNB with proper error handling
-  async sendBNB(privateKey: string, toAddress: string, amount: number): Promise<TransactionResult> {
-    try {
-      const wallet = new ethers.Wallet(privateKey, this.provider)
+    const wallet = new ethers.Wallet(privateKey, this.provider)
       const amountWei = ethers.utils.parseUnits(amount.toString(), 18)
 
       const tx = await wallet.sendTransaction({
@@ -124,9 +149,11 @@ export class BSCService {
     }
   }
 
-  // Send USDT with proper error handling  
+  // Send USDT with proper error handling
   async sendUSDT(privateKey: string, toAddress: string, amount: number): Promise<TransactionResult> {
     try {
+      // Throttle request to respect provider rate limits
+      await throttleRequest(getRequestDelay())
       const wallet = new ethers.Wallet(privateKey, this.provider)
       const usdtContract = new ethers.Contract(this.usdtContractAddress, this.erc20Abi, wallet)
       

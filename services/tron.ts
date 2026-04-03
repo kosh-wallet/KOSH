@@ -1,4 +1,17 @@
 import TronWeb from 'tronweb'
+import { useSettingsStore } from '~/stores/settings'
+
+// Throttle helper - ensures minimum delay between requests
+let lastRequestTime = 0
+const throttleRequest = async (delayMs: number) => {
+    if (delayMs <= 0) return
+    const now = Date.now()
+    const elapsed = now - lastRequestTime
+    if (elapsed < delayMs) {
+        await new Promise(r => setTimeout(r, delayMs - elapsed))
+    }
+    lastRequestTime = Date.now()
+}
 
 export interface TronBalance {
   address: string
@@ -91,7 +104,14 @@ export class TronService {
   // Wait for TRON transaction to be executed and return final receipt status
   private async waitForTxResult(txId: string, timeoutMs: number = 60000, pollMs: number = 3000): Promise<{ confirmed: boolean; success: boolean; reason?: string }> {
     const start = Date.now()
+    // Get request delay from settings store
+    const settingsStore = useSettingsStore()
+    const requestDelay = settingsStore.requestDelay || 1000
+    
     while (Date.now() - start < timeoutMs) {
+      // Throttle request to respect provider rate limits
+      await throttleRequest(requestDelay)
+      
       try {
         // getTransactionInfo returns execution result after inclusion
         const info = await this.tronWeb.trx.getTransactionInfo(txId)
@@ -140,6 +160,7 @@ export class TronService {
         // ignore intermittent RPC errors and continue polling
       }
 
+      // Additional delay between polling attempts (separate from request throttle)
       await new Promise(r => setTimeout(r, pollMs))
     }
 
