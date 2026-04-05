@@ -43,11 +43,10 @@ export default defineNuxtConfig({
     ],
     ssr: false,
     nitro: {
-        prerender: 
-        {
-            routes: [],
-            crawlLinks: false,
-            failOnError: false
+        prerender: {
+            enabled: false,
+            failOnError: false, 
+            fallback: '200.html'
         },
         experimental: {
             wasm: true
