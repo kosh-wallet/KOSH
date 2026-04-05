@@ -61,6 +61,7 @@ export default defineNuxtConfig({
         },
         routeRules: {
             '/**': {
+                prerender: false,
                 headers: {
                     'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'"
                 }
