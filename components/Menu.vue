@@ -29,6 +29,26 @@
                     </button>
                 </li>
                 <li>
+                    <button @click="handleRestoreFromSeed"
+                        class="flex items-center w-full px-5 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"
+                                clip-rule="evenodd">
+                            </path>
+                            <path fill-rule="evenodd"
+                                d="M8 7a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"
+                                clip-rule="evenodd">
+                            </path>
+                            <path fill-rule="evenodd"
+                                d="M8 11a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"
+                                clip-rule="evenodd">
+                            </path>
+                        </svg>
+                        <span class="text-lg font-medium">Restore from mnemonic</span>
+                    </button>
+                </li>
+                <li>
                     <button @click="handleCreateWallet"
                         class="flex items-center w-full px-5 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white">
                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">

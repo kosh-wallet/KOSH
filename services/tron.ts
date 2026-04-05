@@ -218,10 +218,18 @@ export class TronService {
       // Convert amount to contract units (6 decimals)
       const amountInUnits = Math.floor(amount * 1000000)
 
-      // Check balance before transaction
-      const balance = await this.getUSDTBalance(fromAddress)
-      if (balance < amount) {
+      // Check USDT balance before transaction
+      const usdtBalance = await this.getUSDTBalance(fromAddress)
+      if (usdtBalance < amount) {
         throw new Error('Insufficient USDT balance')
+      }
+
+      // Check TRX balance for transaction fees (bandwidth/energy)
+      // USDT transfers require ~10-15 TRX worth of energy; ensure sender has enough
+      const trxBalance = await this.getTRXBalance(fromAddress)
+      const minTrxRequired = 15 // TRX required for USDT transfer energy fees
+      if (trxBalance.balance < minTrxRequired) {
+        throw new Error(`Insufficient TRX balance. Need at least ${minTrxRequired} TRX for fees, but only have ${trxBalance.balance.toFixed(6)} TRX`)
       }
 
       // Execute transaction
@@ -269,10 +277,15 @@ export class TronService {
       // Convert TRX to sun
       const amountInSun = this.tronWeb.toSun(amount)
 
-      // Check balance before transaction
+      // Check TRX balance before transaction
+      // Must cover: transfer amount + transaction fee (~0.1 TRX base fee)
       const balance = await this.getTRXBalance(fromAddress)
+      const minFee = 1 // Minimum 1 TRX for transaction fee
       if (balance.balance < amount) {
-        throw new Error('Insufficient TRX balance')
+        throw new Error(`Insufficient TRX balance. Need ${amount} TRX for transfer, but only have ${balance.balance.toFixed(6)} TRX`)
+      }
+      if (balance.balance < amount + minFee) {
+        throw new Error(`Insufficient TRX balance for transfer + fees. Need ${(amount + minFee).toFixed(6)} TRX (${amount} transfer + ${minFee} fee), but only have ${balance.balance.toFixed(6)} TRX`)
       }
 
       // Create and broadcast transaction

@@ -286,6 +286,21 @@ export const useWalletStore = defineStore('wallet', {
             createdAt: new Date().toISOString(),
             version: '2.0.0'
           }
+        } else if (providedMnemonic) {
+          // Restore from mnemonic: replace existing master wallet with new mnemonic
+          this.masterWallet = {
+            masterMnemonic: {
+              phrase: await encryptAsync(providedMnemonic, password)
+            },
+            networks: {
+              TRON: [],
+              ETHEREUM: [],
+              BSC: [],
+              BITCOIN: []
+            },
+            createdAt: new Date().toISOString(),
+            version: '2.0.0'
+          }
         }
 
         // Get the master mnemonic

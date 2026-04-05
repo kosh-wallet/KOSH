@@ -15,6 +15,7 @@ const error = ref<string | null>(null)
 const seed = ref<string | null>(null)
 const showPassword = ref(false)
 const showSeedModal = ref(false)
+const showRestoreModal = ref(false)
 const passwordModal = ref()
 const selectedNetwork = ref<NetworkType>('TRON')
 const showSettings = ref(false)
@@ -160,6 +161,36 @@ const handleCreateWallet = async () => {
   } catch (err) {
     error.value = 'Failed to generate secure seed for new wallet'
   }
+}
+
+// Handle restore from mnemonic
+const handleRestoreFromSeed = () => {
+  showRestoreModal.value = true
+}
+
+const handleRestore = async (mnemonic: string, password: string, network: NetworkType) => {
+  try {
+    isLoading.value = true
+    error.value = null
+    
+    await walletStore.createWallet(password, network, mnemonic)
+    
+    // Load balance for restored wallet
+    const allWallets = walletStore.getAllWallets
+    const newWallet = allWallets[allWallets.length - 1]
+    if (newWallet) {
+      const balance = await walletStore.fetchBalance(newWallet.address, newWallet.network)
+      walletStore.updateBalance(newWallet.address, balance)
+    }
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to restore wallet'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleCloseRestoreModal = () => {
+  showRestoreModal.value = false
 }
 
 // Handle settings modal
@@ -414,13 +445,21 @@ onUnmounted(() => {
     />
     
     <!-- Menu -->
-    <Menu 
-      @save-to-file="saveToFile" 
-      @add-address="handleAddAddress" 
-      @open-file="openFile" 
+    <Menu
+      @save-to-file="saveToFile"
+      @add-address="handleAddAddress"
+      @open-file="openFile"
       @backup-to-file="saveToFile"
       @create-wallet="handleCreateWallet"
       @open-settings="handleOpenSettings"
+      @restore-from-seed="handleRestoreFromSeed"
+    />
+
+    <!-- Restore from Mnemonic Modal -->
+    <RestoreFromMnemonic
+      :show="showRestoreModal"
+      @restore="handleRestore"
+      @close="handleCloseRestoreModal"
     />
   </div>
 </template>
